@@ -1,0 +1,60 @@
+name: Update OVH Docs on OVHCloud Power
+
+on:
+  workflow_dispatch:
+    inputs:
+      OVH_DOCS_REPOSITORY:
+        description: 'OVH Docs repository'
+        default: 'https://github.com/ovh/docs.git'
+        required: true
+      OVH_DOCS_BRANCH:
+        description: 'OVH Docs branch'
+        default: 'master'
+        required: true
+      CLEAN_PUBLICDIR:
+        description: 'Remove public dir before OVH Docs update'
+        default: 'false'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq sshpass openssh-client
+
+      - name: WakeUp website
+        env:
+            OVH_WEBSITE_URL: ${{ secrets.OVH_WEBSITE_URL }}
+        run: curl --silent --insecure --location --write-out "%{http_code}" -o /dev/null ${OVH_WEBSITE_URL}
+
+      - if: github.event.inputs.CLEAN_PUBLICDIR == 'true'
+        name: Remove public dir
+        env:
+            OVH_SSH_HOST: ${{ secrets.OVH_SSH_HOST }}
+            OVH_SSH_PORT: ${{ secrets.OVH_SSH_PORT }}
+            OVH_SSH_USERNAME: ${{ secrets.OVH_SSH_USERNAME }}
+            OVH_SSH_PASSWORD: ${{ secrets.OVH_SSH_PASSWORD }}
+            OVH_WEBSITE_DOCUMENTROOT: ${{ secrets.OVH_WEBSITE_DOCUMENTROOT }}
+            OVH_WEBSITE_PUBLICDIR: ${{ secrets.OVH_WEBSITE_PUBLICDIR }}
+        run: sshpass -p ${OVH_SSH_PASSWORD} ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=quiet ${OVH_SSH_USERNAME}@${OVH_SSH_HOST} -p ${OVH_SSH_PORT} -- 'rm -rf ${HOME}/'${OVH_WEBSITE_DOCUMENTROOT}'/'${OVH_WEBSITE_PUBLICDIR}''
+
+      - name: Update OVH Docs over SSH
+        env:
+            OVH_SSH_HOST: ${{ secrets.OVH_SSH_HOST }}
+            OVH_SSH_PORT: ${{ secrets.OVH_SSH_PORT }}
+            OVH_SSH_USERNAME: ${{ secrets.OVH_SSH_USERNAME }}
+            OVH_SSH_PASSWORD: ${{ secrets.OVH_SSH_PASSWORD }}
+            OVH_WEBSITE_DOCUMENTROOT: ${{ secrets.OVH_WEBSITE_DOCUMENTROOT }}
+            OVH_WEBSITE_PUBLICDIR: ${{ secrets.OVH_WEBSITE_PUBLICDIR }}
+            OVH_DOCS_REPOSITORY: ${{ github.event.inputs.OVH_DOCS_REPOSITORY }}
+            OVH_DOCS_BRANCH: ${{ github.event.inputs.OVH_DOCS_BRANCH }}
+        run: sshpass -p ${OVH_SSH_PASSWORD} ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=quiet ${OVH_SSH_USERNAME}@${OVH_SSH_HOST} -p ${OVH_SSH_PORT} -- 'source ${HOME}/'${OVH_WEBSITE_DOCUMENTROOT}'/venv/bin/activate && cd ${HOME}/'${OVH_WEBSITE_DOCUMENTROOT}' && rm -rf ovhdocs && git clone '${OVH_DOCS_REPOSITORY}' --single-branch --branch '${OVH_DOCS_BRANCH}' ovhdocs && pelican ovhdocs/pages -o '${OVH_WEBSITE_PUBLICDIR}' -s pelicanconf.py --fatal errors'
+
+      - name: WakeUp website
+        env:
+            OVH_WEBSITE_URL: ${{ secrets.OVH_WEBSITE_URL }}
+        run: curl --fail --silent --insecure --location --write-out "%{http_code}" -o /dev/null ${OVH_WEBSITE_URL}

@@ -7,7 +7,7 @@
 https://labs.ovh.com/managed-python
 
 
-### Gihub Secrets :
+### Github Secrets :
 
 ```OVH_SSH_HOST``` : SSH hostname related to your OVHCloud Power hosting (Ex: ssh.clusterXXX.hosting.ovh.net)
 

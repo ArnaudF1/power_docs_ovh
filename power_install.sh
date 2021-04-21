@@ -166,7 +166,8 @@ function _PELICAN
 {
     _LOGS "INFO" "build static pages"
     cd "${HOME}"/"${_DOCUMENTROOT_OPT}"
-    pelican "${HOME}"/"${_DOCUMENTROOT_OPT}"/ovhdocs/pages -o "${HOME}"/"${_DOCUMENTROOT_OPT}"/"${_PUBLICDIR_OPT}" -s "${HOME}"/"${_DOCUMENTROOT_OPT}"/pelicanconf.py --fatal errors
+    #pelican "${HOME}"/"${_DOCUMENTROOT_OPT}"/ovhdocs/pages -o "${HOME}"/"${_DOCUMENTROOT_OPT}"/"${_PUBLICDIR_OPT}" -s "${HOME}"/"${_DOCUMENTROOT_OPT}"/pelicanconf.py --fatal errors
+    pelican "${HOME}"/"${_DOCUMENTROOT_OPT}"/ovhdocs/pages -o "${HOME}"/"${_DOCUMENTROOT_OPT}"/"${_PUBLICDIR_OPT}" -s "${HOME}"/"${_DOCUMENTROOT_OPT}"/pelicanconf.py
 }
 
 function _CREATING_ENTRYPOINT
